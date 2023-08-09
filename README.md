@@ -60,7 +60,34 @@ Note that the top of the current stack frame is the highest address associated w
 
 Since the values in these three registers are usually addresses, sometimes we will say that a register points somewhere in memory. This means that the address stored in the register is the address of that location in memory. 
 
-#### 2.1.4 Stack: Pushing and popping
+#### 2.1.4 x86 syntax
+
+ - Register references are preceded with a percent sign %
+    - Example: %eax, %esp, %edi
+  
+ -  Immediates are preceded with a dollar sign $
+    - Example: $1, $161, $0x4
+  
+ - Memory references use parentheses and can have immediate offsets
+    - Example: 8(%esp) dereferences memory 8 bytes above the address contained in ESP
+
+#### 2.1.5 Stack Layout
+
+- When your code calls a function, space is made on the stack for local variables. This space is known as the stack frame for the function. The stack frame goes away once the function returns. 
+- The stack starts at higher addresses. Every time your code calls a function, the stack makes extra space by growing down
+- To keep track of the current stack frame, we store two pointers in registers
+  - The EBP (base pointer) register points to the top of the current stack frame
+  - The ESP (stack pointer) register points to the bottom of the current stack frame
+
+Sometimes we want to remember a value by saving it on the stack. There are two steps to adding a value on the stack. First, we have to allocate additional space on the stack by decrementing the `esp`. Then, we store the value in the newly allocated space. The x86 `push` instruction does both of these steps to add a value to the stack.
+
+We may also want to remove values from the stack. The x86 `pop` instruction increments `esp` to remove the next value on the stack. It also takes the value that was just popped and copies the value into a register.
+
+#### 2.1.6 Calling convention
+
+
+
+
 
 
 
