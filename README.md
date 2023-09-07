@@ -321,10 +321,36 @@ A Message Authentication Code (MAC) is a technique used to generate a fixed-leng
 
 ## 4. Web Security
 
+### 4.1 SQL Injection
+
+The general idea behind these attacks is that a web server uses user input as part of the code it runs. If the input is not properly checked, an attacker could create a special input that causes unintended code to run on the server.
 
 
+Consider a vulnerable SQL query. This time, we have a `users` table that contains the `username` and `password` of every user. When the web server receives a login request, it creates a SQL query by plugging in the username and password from the request. Suppose we want to login to the server, but we don’t have an account, and we don’t know anyone’s username. First, in the username field, we should add a dummy username and a quote to end the opening quote from the original query:
 
+```sql
+SELECT username FROM users WHERE username = 'alice'' AND password = 'password123'
+```
+Next, we need to add some SQL syntax so that this query returns more than 0 rows. One trick for forcing a SQL query to always return something is to add some logic that always evaluates to true, such as `OR 1=1`:
+```sql
+SELECT username FROM users WHERE username = 'alice' OR 1=1' AND password = '_____'
+```
+Next, we have to add some SQL so that the rest of the query doesn’t throw a syntax error. One way of doing this is to add a semicolon (ending the previous query) and write a dummy query that matches the remaining SQL:
+```sql
+SELECT username FROM users WHERE username = 'alice' OR 1=1; SELECT username FROM users WHERE username = 'alice' AND password = '_____'
+```
+The second query might not return anything, but the first query will return a nonzero number of entries, which lets us perform a login. The last step is to add some garbage as the password:
+```sql
+SELECT username FROM users WHERE username = 'alice' OR 1=1; SELECT username FROM users WHERE username = 'alice' AND password = 'garbage'
+```
 
+A defense against SQL injection is to use parameterized SQL or prepared statements. This type of SQL compiles the query first, and then plugs in user input after the query has already been interpreted by the SQL parser. Because the user input is added after the query is compiled and interpreted, there is no way for any attacker input to be treated as SQL code. Parameterized SQL prevents all SQL injection attacks, so it is the best defense against SQL injection!
+
+In most SQL libraries, parameterized SQL and unsafe, non-paramaterized SQL are provided as two different API functions. You can ensure that you’ve eliminated all potential SQL vulnerabilities in your code by searching for every database query and replacing each API call with a call to the parameterized SQL API function.
+
+The biggest problem with parameterized SQL is compatibility. SQL is a (mostly) generic language, so SQL written for MySQL can run on Postgres or commercial databases. Parameterized SQL requires support from the underlying database (since the processing itself happens on the database side), and there is no common standard for expressing parameterized SQL. Most SQL libraries will handle the translation for you, but switching to prepared statements may make it harder to switch between databases.
+
+In practice, most modern SQL libraries support parameterized SQL and prepared statements. If the library you are using does not support parameterized SQL, it is probably best to switch to a different SQL library.
 
 
 
